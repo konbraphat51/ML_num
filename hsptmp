@@ -1,0 +1,185 @@
+screen 0, 500,500
+screen 1, 200,500
+
+#const	breakdown	5
+
+gsel 0
+dir_root = dir_cur
+block_size_x = ginfo_winx / breakdown
+block_size_y = ginfo_winy / breakdown
+
+dim block, breakdown, breakdown
+ddim learned_score, 10, breakdown, breakdown
+ddim image_length, 10
+
+onclick gosub *switch_block
+
+gosub*main_menu
+
+*main_draw
+repeat
+	//draw 
+	gsel 0
+	redraw 0
+	color 255,255,255: boxf
+	
+	gosub*draw_block
+	gosub*draw_line
+	gosub*register
+	gosub*analyze
+	gosub*draw_score
+
+	gsel 0
+	redraw 1
+	await 16
+loop
+
+*draw_line
+	color 120, 120, 120
+	repeat breakdown-1, 1
+		//vertical
+		line block_size_x * cnt, 0, block_size_x * cnt, ginfo_winy
+		//horizon
+		line 0, block_size_y * cnt, ginfo_winy, block_size_y * cnt
+	loop
+return
+
+*draw_block
+	repeat breakdown
+		cntx = cnt
+		repeat breakdown
+			cnty = cnt
+
+			switch block(cntx,cnty)
+				case 0
+					color 255,255,255
+				swbreak
+				case 1
+					color 0,0,0
+				swbreak
+			swend
+
+			boxf block_size_x*cntx, block_size_y*cnty, block_size_x*(cntx+1), block_size_y*(cnty+1)
+		loop
+	loop
+return
+
+*register
+	repeat 10
+		getkey x, 48+cnt
+		if x and ginfo_sel == 0{
+			chdir dir_root+"/"+str(cnt)
+			
+			dirlist x, "*.bmp"
+			gsel 0
+			bmpsave str(stat)+".bmp"
+
+			dialog "saved"
+
+			dim block, breakdown, breakdown
+		}
+	loop
+return
+
+*analyze
+	ddim image_length, 10
+	repeat 10
+		number = cnt
+		repeat breakdown
+			cntx = cnt
+			repeat breakdown
+				cnty = cnt
+
+				image_length(number) += powf(double(block(cntx,cnty)) - learned_score(number,cntx,cnty), 2)
+
+				getkey key,38
+				if key{
+					dialog block(cntx,cnty)
+				}
+			loop
+		loop
+	loop
+return
+
+*draw_score
+	//search min
+	x = 100
+	repeat 10
+		if image_length(cnt) < x{
+			x = image_length(cnt)
+			y = cnt
+		}
+	loop
+
+	gsel 1
+	color 255,255,255: boxf
+	
+	pos 0,105
+	color 0,0,0
+	repeat 10
+		if cnt == y{
+			color 255,0,0
+		}else{
+			color 0,0,0
+		}
+		mes str(cnt) +" : "+ image_length(cnt) 
+	loop
+return
+
+*get_where           
+	if ginfo_sel == 0{
+		x = mousex/block_size_x
+		y = mousey/block_size_y
+	}
+return
+
+*switch_block
+	gosub *get_where
+	block(x,y) = switch_num(block(x,y))
+return
+
+*main_menu
+	gsel 1
+	pos 5,5
+	objsize ginfo_winx-10, 100
+	button gosub "learn", *learn
+return 
+
+*learn
+	ddim learned_score, 10, breakdown, breakdown
+	
+	buffer 2
+	repeat 10
+		number = cnt
+		
+		chdir dir_root+"/"+str(number)
+		dirlist x, "*.bmp"
+		file_n = stat
+		split x, "\n", file_list
+
+		score_unit = 1.0 / double(file_n)
+
+		repeat file_n
+			picload file_list(cnt)
+
+			repeat breakdown
+				cntx = cnt
+				repeat breakdown
+					cnty = cnt
+					pget (block_size_x * cntx) + (block_size_x /2), (block_size_y * cnty) + (block_size_y /2)
+
+					if ginfo_r < 125{
+						learned_score(number, cntx, cnty) += score_unit
+					}
+				loop
+			loop		
+		loop
+	loop
+return
+
+#defcfunc switch_num int n
+	if(n == 0){
+		return 1
+	}else{
+		return 0
+	}
