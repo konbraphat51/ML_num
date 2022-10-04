@@ -50,6 +50,7 @@ return
 		repeat breakdown
 			cnty = cnt
 
+			//get color
 			switch block(cntx,cnty)
 				case 0
 					color 255,255,255
@@ -69,13 +70,15 @@ return
 		getkey x, 48+cnt
 		if x and ginfo_sel == 0{
 			chdir dir_root+"/"+str(cnt)
-			
+
+			//save bmp
 			dirlist x, "*.bmp"
 			gsel 0
 			bmpsave str(stat)+".bmp"
 
 			dialog "saved"
 
+			//reset drawing
 			dim block, breakdown, breakdown
 		}
 	loop
@@ -90,12 +93,8 @@ return
 			repeat breakdown
 				cnty = cnt
 
+				//calculate length
 				image_length(number) += powf(double(block(cntx,cnty)) - learned_score(number,cntx,cnty), 2)
-
-				getkey key,38
-				if key{
-					dialog block(cntx,cnty)
-				}
 			loop
 		loop
 	loop
@@ -115,9 +114,9 @@ return
 	color 255,255,255: boxf
 	
 	pos 0,105
-	color 0,0,0
 	repeat 10
 		if cnt == y{
+			//if min
 			color 255,0,0
 		}else{
 			color 0,0,0
@@ -151,7 +150,8 @@ return
 	buffer 2
 	repeat 10
 		number = cnt
-		
+
+		//get teacher files
 		chdir dir_root+"/"+str(number)
 		dirlist x, "*.bmp"
 		file_n = stat
@@ -159,9 +159,10 @@ return
 
 		score_unit = 1.0 / double(file_n)
 
+		//analyze teachers
 		repeat file_n
 			picload file_list(cnt)
-
+			
 			repeat breakdown
 				cntx = cnt
 				repeat breakdown
