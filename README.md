@@ -1,5 +1,5 @@
 # ML_num
-Analyze what number you wrote by simple machine learning.
+Analyze what number you wrote by simple machine learning. (nearest neighbor method)
 
 First push "learn" button to initiate machine learning.
 
